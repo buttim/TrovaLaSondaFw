@@ -877,6 +877,39 @@ sx126x_status_t sx126x_get_rx_buffer_status( const void* context, sx126x_rx_buff
     return status;
 }
 
+sx126x_status_t sx126x_get_gfsk_pkt_status_raw( const void* context, sx126x_pkt_status_gfsk_t* pkt_status )
+{
+    const uint8_t buf[SX126X_SIZE_GET_PKT_STATUS] = {
+        SX126X_GET_PKT_STATUS,
+        SX126X_NOP,
+    };
+    uint8_t pkt_status_local[3] = { 0x00 };
+
+    const sx126x_status_t status =
+        ( sx126x_status_t ) sx126x_hal_read( context, buf, SX126X_SIZE_GET_PKT_STATUS, pkt_status_local, 3 );
+
+    if( status == SX126X_STATUS_OK )
+    {
+        pkt_status->rx_status.pkt_sent =
+            ( ( pkt_status_local[0] & SX126X_GFSK_RX_STATUS_PKT_SENT_MASK ) != 0 ) ? true : false;
+        pkt_status->rx_status.pkt_received =
+            ( ( pkt_status_local[0] & SX126X_GFSK_RX_STATUS_PKT_RECEIVED_MASK ) != 0 ) ? true : false;
+        pkt_status->rx_status.abort_error =
+            ( ( pkt_status_local[0] & SX126X_GFSK_RX_STATUS_ABORT_ERROR_MASK ) != 0 ) ? true : false;
+        pkt_status->rx_status.length_error =
+            ( ( pkt_status_local[0] & SX126X_GFSK_RX_STATUS_LENGTH_ERROR_MASK ) != 0 ) ? true : false;
+        pkt_status->rx_status.crc_error =
+            ( ( pkt_status_local[0] & SX126X_GFSK_RX_STATUS_CRC_ERROR_MASK ) != 0 ) ? true : false;
+        pkt_status->rx_status.adrs_error =
+            ( ( pkt_status_local[0] & SX126X_GFSK_RX_STATUS_ADRS_ERROR_MASK ) != 0 ) ? true : false;
+
+        pkt_status->rssi_sync = pkt_status_local[1];
+        pkt_status->rssi_avg  = pkt_status_local[2];
+    }
+
+    return status;
+}
+
 sx126x_status_t sx126x_get_gfsk_pkt_status( const void* context, sx126x_pkt_status_gfsk_t* pkt_status )
 {
     const uint8_t buf[SX126X_SIZE_GET_PKT_STATUS] = {
@@ -927,6 +960,18 @@ sx126x_status_t sx126x_get_lora_pkt_status( const void* context, sx126x_pkt_stat
         pkt_status->snr_pkt_in_db          = ( ( ( int8_t ) pkt_status_local[1] ) + 2 ) >> 2;
         pkt_status->signal_rssi_pkt_in_dbm = ( int8_t )( -pkt_status_local[2] >> 1 );
     }
+
+    return status;
+}
+
+sx126x_status_t sx126x_get_rssi_inst_raw( const void* context, uint8_t* rssi) {
+    const uint8_t buf[SX126X_SIZE_GET_RSSI_INST] = {
+        SX126X_GET_RSSI_INST,
+        SX126X_NOP,
+    };
+
+    const sx126x_status_t status =
+        ( sx126x_status_t ) sx126x_hal_read( context, buf, SX126X_SIZE_GET_RSSI_INST, rssi, 1 );
 
     return status;
 }

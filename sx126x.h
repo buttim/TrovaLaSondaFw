@@ -1346,6 +1346,16 @@ sx126x_status_t sx126x_get_status( const void* context, sx126x_chip_status_t* ra
 sx126x_status_t sx126x_get_rx_buffer_status( const void* context, sx126x_rx_buffer_status_t* rx_buffer_status );
 
 /**
+ * @brief Get the status of the last GFSK packet received - RAW rssi returned!
+ *
+ * @param [in] context Chip implementation context
+ * @param [out] pkt_status Pointer to a structure to store the packet status
+ *
+ * @returns Operation status
+ */
+sx126x_status_t sx126x_get_gfsk_pkt_status_raw( const void* context, sx126x_pkt_status_gfsk_t* pkt_status );
+
+/**
  * @brief Get the status of the last GFSK packet received
  *
  * @param [in] context Chip implementation context
@@ -1364,6 +1374,20 @@ sx126x_status_t sx126x_get_gfsk_pkt_status( const void* context, sx126x_pkt_stat
  * @returns Operation status
  */
 sx126x_status_t sx126x_get_lora_pkt_status( const void* context, sx126x_pkt_status_lora_t* pkt_status );
+
+/**
+ * @brief Get the instantaneous RSSI RAW value.
+ *
+ * @remark This function shall be called when in Rx mode.
+ *
+ * @param [in] context Chip implementation context
+ * @param [out] rssi Pointer to a variable to store the raw RSSI value
+ *
+ * @returns Operation status
+ *
+ * @see sx126x_set_rx
+ */
+sx126x_status_t sx126x_get_rssi_inst_raw( const void* context, uint8_t* rssi );
 
 /**
  * @brief Get the instantaneous RSSI value.

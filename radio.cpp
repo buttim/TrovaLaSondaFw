@@ -1,5 +1,5 @@
 #include "sx1278.h"
-#include <arduino.h>
+#include <Arduino.h>
 #include <SPI.h>
 #include "TrovaLaSondaFw.h"
 #include "radio.h"
@@ -235,7 +235,7 @@ void initRadio() {
   // writeRegister(RegIrqFlags1, 0xFF);
   // writeRegister(RegIrqFlags2, 0xFF);
 
-  // dumpRegisters();
+  dumpRegisters();
 #endif
 }
 
@@ -256,8 +256,8 @@ bool loopRadio() {
       nBytesRead = 0;
       actualPacketLength = sondes[currentSonde]->packetLength;
       res = sx126x_clear_irq_status(NULL, SX126X_IRQ_SYNC_WORD_VALID);
-      res = sx126x_get_gfsk_pkt_status(NULL, &pktStatus);
-      rssi = pktStatus.rssi_sync;
+      res = sx126x_get_gfsk_pkt_status_raw(NULL, &pktStatus);
+      rssi = (uint8_t)pktStatus.rssi_sync;
     }
     if (tLastRead != 0 && millis() - tLastRead > 1000) {
       res = sx126x_long_pkt_rx_prepare_for_last(NULL, &pktRxState, 0);
@@ -298,8 +298,8 @@ bool loopRadio() {
       res = sx126x_set_rx_with_timeout_in_rtc_step(NULL, 0);
       res = sx126x_get_rx_buffer_status(NULL, &bufStatus);
       res = sx126x_read_buffer(NULL, bufStatus.buffer_start_pointer, buf, bufStatus.pld_len_in_bytes);
-      res = sx126x_get_gfsk_pkt_status(NULL, &pktStatus);
-      rssi = pktStatus.rssi_sync;
+      res = sx126x_get_gfsk_pkt_status_raw(NULL, &pktStatus);
+      rssi = (uint8_t)pktStatus.rssi_sync;
       //Serial.printf("PKT %d bytes\n", bufStatus.pld_len_in_bytes);
       //dump(buf, PACKET_LENGTH);
       validPacket = sondes[currentSonde]->processPacket(buf);
@@ -313,16 +313,6 @@ bool loopRadio() {
   static uint8_t oldIrq1, oldIrq2;
   uint8_t irq1 = readRegister(RegIrqFlags1),
           irq2 = readRegister(RegIrqFlags2);
-
-  ///////////////////////////////////////////////////////////////
-  if (tLastPacket != 0 && millis() - tLastPacket > 3000) {
-    tLastPacket = 0;
-    // Serial.println("\n---------------");
-    // dumpRegisters();
-    // Serial.println("---------------");
-    initRadio();  //HACKHACK
-  }
-  ///////////////////////////////////////////////////////////////
 
   if ((irq2 & 0x10) != 0) {  //FIFO overrun
     Serial.println("OVERRUN");
@@ -368,11 +358,11 @@ bool loopRadio() {
   } else {
     if ((tLastPacket == 0 || millis() - tLastPacket > 3000) && (tLastRSSI == 0 || millis() - tLastRSSI > 500)) {
 #ifdef SX126X
-      int16_t t;
-      sx126x_get_rssi_inst(NULL, &t);
+      uint8_t t;
+      sx126x_get_rssi_inst_raw(NULL, &t);
       rssi = t;
 #else
-      rssi = -readRegister(RegRssiValue) / 2;
+      rssi = readRegister(RegRssiValue);
 #endif
       //Serial.printf("rssi: %d\n", rssi);
       tLastRSSI = millis();

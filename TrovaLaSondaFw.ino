@@ -14,12 +14,13 @@
 #include "TrovaLaSondaFw.h"
 #include "radio.h"
 #include "rs41.h"
+#include "rd41.h"
 #include "m10.h"
 #include "m20.h"
 #include "dfm.h"
 #include "Ble.h"
 
-char version[] = "2.09";
+char version[] = "2.14";
 #if defined(ARDUINO_TTGO_LoRa32_V1)
 char platform[] = "TL32";
 #elif defined(WIFI_LoRa_32_V3)
@@ -74,7 +75,7 @@ const uint8_t flipByte[] = {
 //     return false;
 //   }
 // };
-Sonde *sondes[] = { &rs41, &m20, &m10, &dfm09, &dfm17 };
+Sonde *sondes[] = { &rs41, &m20, &m10, &dfm09, &dfm17, &rd41 };
 Preferences preferences;
 Ticker tickBuzzOff, tickLedOff;
 MD_KeySwitch button(BUTTON, LOW);
@@ -137,6 +138,24 @@ void readPrefs() {
   preferences.end();
 }
 
+
+const char *resetReason(esp_reset_reason_t reason) {
+  switch (reason) {
+    case ESP_RST_UNKNOWN: return "unknown reset";
+    case ESP_RST_POWERON: return "power on";
+    case ESP_RST_EXT: return "external reset";
+    case ESP_RST_SW: return "software reset";
+    case ESP_RST_PANIC: return "panic";
+    case ESP_RST_INT_WDT: return "interrupt watchdog";
+    case ESP_RST_TASK_WDT: return "task watchdog";
+    case ESP_RST_WDT: return "other watchdog";
+    case ESP_RST_DEEPSLEEP: return "exiting deep sleep";
+    case ESP_RST_BROWNOUT: return "brownout reset";
+    case ESP_RST_SDIO: return "reset over SDIO";
+    default: return "???";
+  }
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -148,6 +167,20 @@ void setup() {
     button.enableRepeat(false);
     button.enableLongPress(true);
     button.setLongPressTime(1000);
+    if (esp_reset_reason()==ESP_RST_DEEPSLEEP) {
+        uint64_t t=millis();
+        bool ok=false;
+
+        while (digitalRead(BUTTON) == LOW)
+          if (millis()-t>1000) {
+            ok=true;
+            break;
+          }
+        if (!ok) {
+          esp_sleep_enable_ext0_wakeup(BUTTON, 0);
+          esp_deep_sleep_start();
+        }
+    }
   }
   readPrefs();
   bip();

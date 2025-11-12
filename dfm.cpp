@@ -1,6 +1,6 @@
 //Portions from https://github.com/dbdexter-dev/sondedump/
 //under MIT license
-#include <arduino.h>
+#include <Arduino.h>
 #include "TrovaLaSondaFw.h"
 #include "radio.h"
 #include "dfm.h"

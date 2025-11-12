@@ -1,13 +1,10 @@
 Requisites
 ---
-* Ticker
+* (Ticker)
+* (Preferences)
+* (BLE)
 * MD_KeySwitch
-* Preferences
-* BLE
 * base64_encode
 * CRC
 * FEC Reed-Solomon
-* Adafruit GFX Library
-* Adafruit BusIO
-* Adafruit_SSD1306
-* Heltec_ESP32_Dev-Boards (?)
+* ESP8266 and ESP32 OLEO driver for SSD1306 displays

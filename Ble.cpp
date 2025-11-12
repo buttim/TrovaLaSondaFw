@@ -1,3 +1,4 @@
+#define CONFIG_BLUEDROID_ENABLED
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>

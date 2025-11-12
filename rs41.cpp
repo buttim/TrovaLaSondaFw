@@ -14,9 +14,9 @@ static int processPartialPacket(uint8_t buf[]);
 Sonde rs41 = {
   .name = "RS41",
   .bitRate = 4800,
-  .afcBandWidth = 50000,//12500,
-  .frequencyDeviation = 3600,//6300,
-  .bandwidthHz = 9700,
+  .afcBandWidth = 12500,
+  .frequencyDeviation = 6300,
+  .bandwidthHz = 6300,
   .packetLength = RS41_PACKET_LENGTH,
   .partialPacketLength = 48,
   .preambleLengthBytes = 3,

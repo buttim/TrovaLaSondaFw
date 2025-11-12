@@ -70,13 +70,13 @@ unsigned int chute_len = 128;
 
 static SSD1306Wire display(0x3c, SDA_OLED, SCL_OLED);
 
-void showLogoText(int vertOffset=0,int horizOffset=0) {
+void showLogoText(int vertOffset = 0, int horizOffset = 0) {
   display.setFont(ArialMT_Plain_16);
   display.setTextAlignment(TEXT_ALIGN_CENTER);
-  display.drawString(65+horizOffset, 32-vertOffset, "TrovaLaSonda");
-  display.drawString(64+horizOffset, 32-vertOffset, "TrovaLaSonda");
-  display.drawString(64-horizOffset, 47-vertOffset, version);
-  display.drawString(65-horizOffset, 47-vertOffset, version);
+  display.drawString(65 + horizOffset, 32 - vertOffset, "TrovaLaSonda");
+  display.drawString(64 + horizOffset, 32 - vertOffset, "TrovaLaSonda");
+  display.drawString(64 - horizOffset, 47 - vertOffset, version);
+  display.drawString(65 - horizOffset, 47 - vertOffset, version);
 }
 
 void initDisplay() {
@@ -113,7 +113,7 @@ void initDisplay() {
     display.drawXbm(i + (128 - logo_width) / 2, 1, logo_width, logo_height, logo_bits);
     showLogoText();
     display.display();
-    delay(DT/2);
+    delay(DT / 2);
   }
   delay(200);
   for (i = 0; i < 16; i++) {
@@ -124,12 +124,12 @@ void initDisplay() {
     delay(DT);
   }
   // delay(300);
-  for (i = 0; i < 120; i+=2) {
+  for (i = 0; i < 120; i += 2) {
     display.clear();
     display.setTextAlignment(TEXT_ALIGN_CENTER);
-    showLogoText(16,i);
+    showLogoText(16, i);
     display.display();
-    delay(DT/4);
+    delay(DT / 4);
   }
 }
 
@@ -225,7 +225,14 @@ void updateDisplay(uint32_t freq, const char* type, bool mute, bool connected, c
   }
   drawBattery(bat);
   display.setColor(INVERSE);
-  display.fillRect(0, 0, 128 + rssi - 1, 16);
+  
+  int right;
+#ifdef SX1278
+  right = 128 - (rssi - 128) + 1;
+#else
+  right = 128 - 2 * (rssi - 70) / 3 + 1;
+#endif
+  display.fillRect(0, 0, right, 16);
 
   display.display();
 }
