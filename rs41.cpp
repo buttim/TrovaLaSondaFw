@@ -170,7 +170,7 @@ static int processPartialPacket(uint8_t buf[]) {
 
 static bool processPacket(uint8_t buf[]) {
   //TODO: testare AUX
-  double x, y, z, vx, vy, vz, vn, ve, vu;
+  double x, y, z, vx, vy, vz, vn, ve, vu,latRad, lngRad;
   int svs, n = 48 + 1;
 
   // packet.frame = 0;
@@ -231,12 +231,15 @@ static bool processPacket(uint8_t buf[]) {
             packet.lng = lng;
             packet.alt = alt;
 
+	    latRad=lat*M_PI/180;
+	    lngRad=lng*M_PI/180;
+
             vx = (int16_t)(buf[n + 2 + 0x0C] + 256 * buf[n + 2 + 0x0D]) / 100.0;
             vy = (int16_t)(buf[n + 2 + 0x0E] + 256 * buf[n + 2 + 0x0F]) / 100.0;
             vz = (int16_t)(buf[n + 2 + 0x10] + 256 * buf[n + 2 + 0x11]) / 100.0;
-            vn = (-(vx * sin(packet.lat) * cos(packet.lng)) - vy * sin(packet.lat) * sin(packet.lng)) + vz * cos(packet.lat);
-            ve = -(vx * sin(packet.lng)) + vy * cos(packet.lng);
-            vu = vx * cos(packet.lat) * cos(packet.lng) + vy * cos(packet.lat) * sin(packet.lng) + vz * sin(packet.lat);
+            vn = (-(vx * sin(latRad) * cos(lngRad)) - vy * sin(latRad) * sin(lngRad)) + vz * cos(latRad);
+            ve = -(vx * sin(lngRad)) + vy * cos(lngRad);
+            vu = vx * cos(latRad) * cos(lngRad) + vy * cos(latRad) * sin(lngRad) + vz * sin(latRad);
             packet.hVel = sqrt(pow(vn, 2) + pow(ve, 2));
             packet.vVel = vu;
             Serial.printf(" lat:%f lon:%f h:%f svs:%d vel:%fm/s vup:%fm/s", packet.lat, packet.lng, packet.alt, svs, packet.hVel, vu);
