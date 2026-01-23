@@ -140,7 +140,7 @@ void displayOTA() {
   if (otaErr == 0) {
     display.drawString(64, 25, "UPDATE");
     if (otaLength != 0)
-      display.drawProgressBar(0, 48, 125, 10, otaProgress * 100 / otaLength);
+      display.drawProgressBar(0, 48, 125, 10, otaProgress * 100.0 / otaLength);
   } else {
     char s[12];
     display.drawString(64, 28, "ERROR");
