@@ -20,7 +20,7 @@
 #include "dfm.h"
 #include "Ble.h"
 
-char version[] = "2.15";
+char version[] = "2.16";
 #if defined(ARDUINO_TTGO_LoRa32_V1)
 char platform[] = "TL32";
 #elif defined(WIFI_LoRa_32_V3)
@@ -201,6 +201,13 @@ void setup() {
     Serial.println("Confermo partizione OK");
     esp_ota_mark_app_valid_cancel_rollback();
   }
+
+  //////////////////////////////////////////////////////////////
+  // otaProgress=20;
+  // otaLength=100;
+  // displayOTA();
+  // while (true);
+  //////////////////////////////////////////////////////////////
 }
 
 void loop() {

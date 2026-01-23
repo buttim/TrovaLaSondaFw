@@ -40,24 +40,23 @@ const uint8_t   whitening[] = {
 // clang-format on
 
 static bool correctErrors(uint8_t data[], int length) {
-  static uint8_t buf[256], dec[256];
-  int i;
-  int offset = length == RS41_PACKET_LENGTH ? 99 : 0;
+  static uint8_t buf[256], dec[RS41AUX_PACKET_LENGTH - 48];
+  int i, offset = length == RS41_PACKET_LENGTH ? 99 : 0;
 
   //prima parte
-  memset(buf, 0, 256);
+  memset(buf, 0, sizeof buf);
   for (i = 0; i < (length - 48) / 2; i++)
     buf[offset + i] = data[length - 1 - 2 * i];
-  for (i = 0; i < 24; i++)
+  for (i = 0; i < 24; i++) 
     buf[254 - i] = data[24 + i];
 
   if (0 != rs.Decode(buf, dec)) return false;
 
-  for (i = 0; i < (length - 48) / 2; i++)
-    data[311 - 2 * i] = dec[99 + i];
+  for (i = 0; i < (length - 48) / 2; i++) 
+    data[length - 1 - 2 * i] = dec[offset + i];
 
   //seconda parte
-  memset(buf, 0, 256);
+  memset(buf, 0, sizeof buf);
   for (i = 0; i < (length - 48) / 2; i++)
     buf[offset + i] = data[length - 1 - 2 * i - 1];
   for (i = 0; i < 24; i++)
@@ -163,14 +162,14 @@ void ecef2wgs84(double x, double y, double z, double &lat, double &lon, float &a
 }
 
 static int processPartialPacket(uint8_t buf[]) {
-  uint8_t byte=whitening[48 % sizeof whitening] ^ flipByte[buf[48]];
+  uint8_t byte = whitening[48 % sizeof whitening] ^ flipByte[buf[48]];
   Serial.printf("processPartialPacket %02X\n", byte);
   return actualPacketLength = byte == 0xF0 ? RS41AUX_PACKET_LENGTH : RS41_PACKET_LENGTH;
 }
 
 static bool processPacket(uint8_t buf[]) {
   //TODO: testare AUX
-  double x, y, z, vx, vy, vz, vn, ve, vu,latRad, lngRad;
+  double x, y, z, vx, vy, vz, vn, ve, vu, latRad, lngRad;
   int svs, n = 48 + 1;
 
   // packet.frame = 0;
@@ -183,10 +182,11 @@ static bool processPacket(uint8_t buf[]) {
   for (int i = 0; i < actualPacketLength; i++)
     buf[i] = whitening[i % sizeof whitening] ^ flipByte[buf[i]];
 
-  if (!correctErrors(buf, actualPacketLength) && buf[48] == 0x0F) {
+  if (!correctErrors(buf, actualPacketLength)) {
     Serial.println("ECC failed");
     return false;
   }
+
   while (n < actualPacketLength) {
     int blockType = buf[n],
         blockLength = buf[n + 1],
@@ -231,8 +231,8 @@ static bool processPacket(uint8_t buf[]) {
             packet.lng = lng;
             packet.alt = alt;
 
-	    latRad=lat*M_PI/180;
-	    lngRad=lng*M_PI/180;
+            latRad = lat * M_PI / 180;
+            lngRad = lng * M_PI / 180;
 
             vx = (int16_t)(buf[n + 2 + 0x0C] + 256 * buf[n + 2 + 0x0D]) / 100.0;
             vy = (int16_t)(buf[n + 2 + 0x0E] + 256 * buf[n + 2 + 0x0F]) / 100.0;
@@ -242,7 +242,7 @@ static bool processPacket(uint8_t buf[]) {
             vu = vx * cos(latRad) * cos(lngRad) + vy * cos(latRad) * sin(lngRad) + vz * sin(latRad);
             packet.hVel = sqrt(pow(vn, 2) + pow(ve, 2));
             packet.vVel = vu;
-            Serial.printf(" lat:%f lon:%f h:%f svs:%d vel:%fm/s vup:%fm/s", packet.lat, packet.lng, packet.alt, svs, packet.hVel, vu);
+            Serial.printf(" lat:%.6f lon:%.6f h:%.1f svs:%d vel:%.1fm/s vup:%.1fm/s", packet.lat, packet.lng, packet.alt, svs, packet.hVel, vu);
           }
           break;
         case 0x80:  //CRYPTO

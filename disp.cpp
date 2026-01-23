@@ -181,7 +181,7 @@ static void drawBattery(int level) {
 }
 
 void updateDisplay(uint32_t freq, const char* type, bool mute, bool connected, const char* ser, int bat, int rssi, float lat, float lon, float alt, int frame) {
-  char s[1 + 3 + 1 + 5 + 1];  //sign,integer,dot,decimals,null
+  static char s[1 + 3 + 1 + 5 + 1];  //sign,integer,dot,decimals,null
 
   display.normalDisplay();
   display.clear();

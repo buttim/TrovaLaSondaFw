@@ -6,7 +6,7 @@
 #include "rs41.h"
 #include "Ble.h"
 
-uint8_t buf[RS41AUX_PACKET_LENGTH];
+uint8_t buf[MAX_PACKET_LENGTH];
 int nBytesRead = 0;
 
 #ifdef SX126X

@@ -23,7 +23,7 @@ const gpio_num_t BUTTON = GPIO_NUM_NC, VBAT_PIN = GPIO_NUM_35, ADC_CTRL_PIN = GP
 #error "Board not supported"
 #endif
 
-#define PACKET_LENGTH RS41AUX_PACKET_LENGTH  //longest packet length
+#define MAX_PACKET_LENGTH RS41AUX_PACKET_LENGTH  //longest packet length
 #define SERIAL_LENGTH 12
 #define SYNCWORD_SIZE 8
 
