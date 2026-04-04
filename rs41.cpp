@@ -17,7 +17,7 @@ Sonde rs41 = {
   .afcBandWidth = 12500,
   .frequencyDeviation = 6300,
   .bandwidthHz = 6300,
-  .packetLength = RS41_PACKET_LENGTH,
+  .packetLength = RS41AUX_PACKET_LENGTH,//RS41_PACKET_LENGTH,
   .partialPacketLength = 48,
   .preambleLengthBytes = 3,
   .syncWordLen = 64,
@@ -184,6 +184,7 @@ static bool processPacket(uint8_t buf[]) {
 
   if (!correctErrors(buf, actualPacketLength)) {
     Serial.println("ECC failed");
+    dump(buf,actualPacketLength,32);
     return false;
   }
 

@@ -321,7 +321,7 @@ bool loopRadio() {
   }
   if ((irq2 & 4) != 0) {  //digitalRead(RADIO_DIO_0) == HIGH) {  //DIO0: payload ready
     Serial.printf("PKT (len=%d)\n",actualPacketLength);
-    while (nCurByte < actualPacketLength) {
+    while (nCurByte < RS41AUX_PACKET_LENGTH) {
       buf[nCurByte] = readRegister(RegFIFO);
       nCurByte++;
     }
@@ -343,7 +343,7 @@ bool loopRadio() {
   if ((irq2 & 0x20) != 0) {  //fifo level
     if (nCurByte == 0)
       rssi = readRegister(RegRssiValue);
-    for (int i = 0; i < 48 && nCurByte < actualPacketLength; i++, nCurByte++) {
+    for (int i = 0; i < 48 && nCurByte < RS41AUX_PACKET_LENGTH; i++, nCurByte++) {
       buf[nCurByte] = readRegister(RegFIFO);
       if (sondes[currentSonde]->partialPacketLength > 0 && nCurByte == sondes[currentSonde]->partialPacketLength)
         actualPacketLength = sondes[currentSonde]->processPartialPacket(buf);
