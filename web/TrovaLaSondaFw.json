@@ -6,12 +6,12 @@
       "file": "rdzTrovaLaSonda.ino.bin"
     },
     "HL32": {
-      "version": "2.16",
-      "info": "Supports X series RS41s",
+      "version": "2.19",
+      "info": "Supports the v3.2 board",
       "file": "HELTEC/TrovaLaSondaFw.ino.bin"
     },
     "TL32": {
-      "version": "2.16",
+      "version": "2.19",
       "info": "Supports X series RS41s",
       "file": "TTGO/TrovaLaSondaFw.ino.bin"
     }

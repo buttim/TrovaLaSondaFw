@@ -20,7 +20,7 @@
 #include "dfm.h"
 #include "Ble.h"
 
-char version[] = "2.18";
+char version[] = "2.19";
 #if defined(ARDUINO_TTGO_LoRa32_V1)
 char platform[] = "TL32";
 #elif defined(WIFI_LoRa_32_V3)
@@ -108,21 +108,44 @@ void VBattInit() {
     pinMode(ADC_CTRL_PIN, OUTPUT);
 }
 
-int getBattLevel() {
+bool isV32=false;
+
+int getBattLevel(bool isV32) {
+  uint32_t raw;
+
+  if (ADC_CTRL_PIN != GPIO_NUM_NC) {
+    digitalWrite(ADC_CTRL_PIN, isV32?HIGH:LOW);
+    delay(10);
+  }
+  for (int i = 0; i < BATTERY_SAMPLES; i++)
+    raw += analogRead(VBAT_PIN);
+
+  if (ADC_CTRL_PIN != GPIO_NUM_NC)
+    digitalWrite(ADC_CTRL_PIN, isV32?LOW:HIGH);
+
+  return constrain(map(raw/BATTERY_SAMPLES, 670, 950, 0, 100), 0, 100);
+}
+
+/*int getBattLevel() {
+  uint32_t raw1 = 0, raw2 = 0;
+  int i;
+
   if (ADC_CTRL_PIN != GPIO_NUM_NC) {
     digitalWrite(ADC_CTRL_PIN, LOW);
     delay(10);
   }
-  uint32_t raw = 0;
-  for (int i = 0; i < BATTERY_SAMPLES; i++)
-    raw += analogRead(VBAT_PIN);
+  for (i = 0; i < BATTERY_SAMPLES; i++)
+    raw1 += analogRead(VBAT_PIN);
 
-  raw /= BATTERY_SAMPLES;
-
-  if (ADC_CTRL_PIN != GPIO_NUM_NC)
+  if (ADC_CTRL_PIN != GPIO_NUM_NC) {
     digitalWrite(ADC_CTRL_PIN, HIGH);
-  return constrain(map(raw, 670, 950, 0, 100), 0, 100);
-}
+    delay(10);
+  }
+  for (i = 0; i < BATTERY_SAMPLES; i++)
+    raw2 += analogRead(VBAT_PIN);
+
+  return constrain(map(max(raw1,raw2)/BATTERY_SAMPLES, 670, 950, 0, 100), 0, 100);
+}*/
 
 void savePrefs() {
   preferences.begin("TLS", false);
@@ -162,6 +185,10 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(BUZZER, OUTPUT);
   VBattInit();
+#if  defined(WIFI_LoRa_32_V3)
+    isV32=getBattLevel(true) > getBattLevel(false);
+    Serial.printf("isV32: %d\n",isV32);
+#endif
   if (BUTTON != GPIO_NUM_NC) {
     pinMode(BUTTON, INPUT);
     button.enableRepeat(false);
@@ -245,7 +272,7 @@ void loop() {
       displayOTA();
     } else {
       tLastDisplay = millis();
-      batt = getBattLevel();
+      batt = getBattLevel(isV32);
       updateDisplay(freq, sondes[currentSonde]->name, mute, connected, packet.serial, batt, rssi, packet.lat, packet.lng, packet.alt);
       BLENotifyBatt();
       BLENotifyRSSI();

@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <driver/gpio.h>
 
-#if defined(WIFI_LoRa_32_V3)
+#if defined(WIFI_LORA_32_V3)
 #define SX126X
 const gpio_num_t BUTTON = GPIO_NUM_0, VBAT_PIN = GPIO_NUM_1, ADC_CTRL_PIN = GPIO_NUM_37, BUZZER = GPIO_NUM_46,
                  RADIO_NSS = GPIO_NUM_8, RADIO_DIO_1 = GPIO_NUM_14, RADIO_BUSY = GPIO_NUM_13, RADIO_RESET = GPIO_NUM_12,

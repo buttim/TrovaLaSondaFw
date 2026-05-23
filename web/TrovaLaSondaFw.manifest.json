@@ -1,6 +1,6 @@
 {
   "name": "TrovaLaSondaFw",
-  "version": "2.16",
+  "version": "2.19",
   "new_install_prompt_erase": false,
   "builds": [
     {

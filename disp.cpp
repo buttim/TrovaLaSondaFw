@@ -79,6 +79,40 @@ void showLogoText(int vertOffset = 0, int horizOffset = 0) {
   display.drawString(65 - horizOffset, 47 - vertOffset, version);
 }
 
+enum BoardVersion { HELTEC_V3_1, HELTEC_V3_2, UNKNOWN };
+
+BoardVersion detectBoardVersion() {
+    // 1. Initialize I2C pins
+    Wire.begin(SDA_OLED, SCL_OLED);
+    
+    // 2. Drive Vext pin LOW
+    pinMode(Vext, OUTPUT);
+    digitalWrite(Vext, LOW);
+    delay(50); // Allow power to settle
+    
+    // 3. Scan I2C for the onboard display (Address 0x3C)
+    Wire.beginTransmission(0x3C);
+    byte error = Wire.endTransmission();
+    
+    if (error == 0) {
+        // If the display answers when GPIO36 is LOW, it is V3.1 logic (LOW = ON)
+        return HELTEC_V3_1;
+    } else {
+        // If it didn't answer, try driving GPIO36 HIGH
+        digitalWrite(Vext, HIGH);
+        delay(50);
+        
+        Wire.beginTransmission(0x3C);
+        error = Wire.endTransmission();
+        
+        if (error == 0) {
+            // If the display answers only when GPIO36 is HIGH, it is V3.2 logic (HIGH = ON)
+            return HELTEC_V3_2;
+        }
+    }
+    return UNKNOWN;
+}
+
 void initDisplay() {
   int i;
 
@@ -89,6 +123,7 @@ void initDisplay() {
 #ifdef WIFI_LoRa_32_V3
   pinMode(RST_OLED, OUTPUT);
   digitalWrite(RST_OLED, HIGH);
+  //Serial.printf("detectBoardVersion->%d\n",detectBoardVersion());
 #endif
   display.init();
   display.flipScreenVertically();
