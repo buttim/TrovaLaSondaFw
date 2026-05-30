@@ -1,7 +1,7 @@
 #ifndef __BLE_H__
 #define __BLE_H__
 
-#define CONFIG_BLUEDROID_ENABLED
+//#define CONFIG_BLUEDROID_ENABLED
 
 void BLELoop();
 void BLEInit();

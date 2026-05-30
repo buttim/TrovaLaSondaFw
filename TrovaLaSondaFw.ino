@@ -20,7 +20,7 @@
 #include "dfm.h"
 #include "Ble.h"
 
-char version[] = "2.19";
+char version[] = "2.20";
 #if defined(ARDUINO_TTGO_LoRa32_V1)
 char platform[] = "TL32";
 #elif defined(WIFI_LoRa_32_V3)
@@ -259,10 +259,10 @@ void loop() {
   // return;
 ////////////////////////////////////////////////////////
 
-  if (tLastBLELoop == 0 || millis() - tLastBLELoop > 500) {
-    tLastBLELoop = millis();
+  //if (tLastBLELoop == 0 || millis() - tLastBLELoop > 500) {
+    //tLastBLELoop = millis();
     BLELoop();
-  }
+  //}
   if (loopRadio()) {
     bip(150, constrain(map(packet.alt, 0, 40000, 200, 9000), 200, 9000));
     flash(10);
