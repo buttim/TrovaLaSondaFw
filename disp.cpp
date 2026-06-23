@@ -68,6 +68,21 @@ unsigned char chute_bits[] = {
 };
 unsigned int chute_len = 128;
 
+const int sleeping_width = 32, sleeping_height = 32;
+static unsigned char sleeping_bits[] = {
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3e,
+  0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x04, 
+  0x00, 0xfc, 0xf1, 0x3e, 0x00, 0x03, 0x46, 0x00, 0xc0, 0x00, 0x38, 0x00, 
+  0x60, 0x00, 0xf0, 0x00, 0x30, 0x00, 0x67, 0x00, 0x10, 0x00, 0x42, 0x00, 
+  0x08, 0x00, 0x87, 0x00, 0x08, 0x00, 0x80, 0x00, 0x04, 0x00, 0x00, 0x01, 
+  0x04, 0x00, 0x00, 0x01, 0x04, 0xcf, 0x03, 0x01, 0x84, 0x30, 0x04, 0x01, 
+  0x04, 0x00, 0x00, 0x01, 0x04, 0x00, 0x00, 0x01, 0x04, 0x00, 0x00, 0x01, 
+  0x08, 0x84, 0x80, 0x00, 0x08, 0x78, 0x80, 0x00, 0x10, 0x00, 0x40, 0x00, 
+  0x30, 0x00, 0x60, 0x00, 0x60, 0x00, 0x30, 0x00, 0xc0, 0x00, 0x18, 0x00, 
+  0x00, 0x03, 0x06, 0x00, 0x00, 0xfc, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
 static SSD1306Wire display(0x3c, SDA_OLED, SCL_OLED);
 
 void showLogoText(int vertOffset = 0, int horizOffset = 0) {
@@ -79,38 +94,40 @@ void showLogoText(int vertOffset = 0, int horizOffset = 0) {
   display.drawString(65 - horizOffset, 47 - vertOffset, version);
 }
 
-enum BoardVersion { HELTEC_V3_1, HELTEC_V3_2, UNKNOWN };
+enum BoardVersion { HELTEC_V3_1,
+                    HELTEC_V3_2,
+                    UNKNOWN };
 
 BoardVersion detectBoardVersion() {
-    // 1. Initialize I2C pins
-    Wire.begin(SDA_OLED, SCL_OLED);
-    
-    // 2. Drive Vext pin LOW
-    pinMode(Vext, OUTPUT);
-    digitalWrite(Vext, LOW);
-    delay(50); // Allow power to settle
-    
-    // 3. Scan I2C for the onboard display (Address 0x3C)
+  // 1. Initialize I2C pins
+  Wire.begin(SDA_OLED, SCL_OLED);
+
+  // 2. Drive Vext pin LOW
+  pinMode(Vext, OUTPUT);
+  digitalWrite(Vext, LOW);
+  delay(50);  // Allow power to settle
+
+  // 3. Scan I2C for the onboard display (Address 0x3C)
+  Wire.beginTransmission(0x3C);
+  byte error = Wire.endTransmission();
+
+  if (error == 0) {
+    // If the display answers when GPIO36 is LOW, it is V3.1 logic (LOW = ON)
+    return HELTEC_V3_1;
+  } else {
+    // If it didn't answer, try driving GPIO36 HIGH
+    digitalWrite(Vext, HIGH);
+    delay(50);
+
     Wire.beginTransmission(0x3C);
-    byte error = Wire.endTransmission();
-    
+    error = Wire.endTransmission();
+
     if (error == 0) {
-        // If the display answers when GPIO36 is LOW, it is V3.1 logic (LOW = ON)
-        return HELTEC_V3_1;
-    } else {
-        // If it didn't answer, try driving GPIO36 HIGH
-        digitalWrite(Vext, HIGH);
-        delay(50);
-        
-        Wire.beginTransmission(0x3C);
-        error = Wire.endTransmission();
-        
-        if (error == 0) {
-            // If the display answers only when GPIO36 is HIGH, it is V3.2 logic (HIGH = ON)
-            return HELTEC_V3_2;
-        }
+      // If the display answers only when GPIO36 is HIGH, it is V3.2 logic (HIGH = ON)
+      return HELTEC_V3_2;
     }
-    return UNKNOWN;
+  }
+  return UNKNOWN;
 }
 
 void initDisplay() {
@@ -128,6 +145,8 @@ void initDisplay() {
   display.init();
   display.flipScreenVertically();
   display.invertDisplay();
+
+  //animation
   for (i = 0; i < 32; i++) {
     display.clear();
     display.drawXbm((128 - chute_width) / 2, i - chute_height, chute_width, chute_height, chute_bits);
@@ -166,6 +185,12 @@ void initDisplay() {
     display.display();
     delay(DT / 4);
   }
+}
+
+void showSleeping() {
+  display.clear();
+  display.drawXbm(128 / 2 - 16, 64 / 2 - 16, sleeping_width, sleeping_height, sleeping_bits);
+  display.display();
 }
 
 void displayOTA() {
@@ -260,7 +285,7 @@ void updateDisplay(uint32_t freq, const char* type, bool mute, bool connected, c
   }
   drawBattery(bat);
   display.setColor(INVERSE);
-  
+
   int right;
 #ifdef SX1278
   right = 128 - (rssi - 128) + 1;

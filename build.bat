@@ -1,4 +1,3 @@
-@echo off
 echo [1m************ compilazione per Heltec ************[0m
 arduino-cli compile -e --fqbn Heltec-esp32:esp32:heltec_wifi_lora_32_V3
 echo [1m************ compilazione per TTGO ************[0m

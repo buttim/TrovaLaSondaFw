@@ -184,7 +184,7 @@ void BLEInit() {
   delay(1000);
   Serial.println("Initializing Multi-Service NimBLE Stack...");
 
-  NimBLEDevice::init(s);
+  NimBLEDevice::init("");
   NimBLEDevice::setPower(ESP_PWR_LVL_P9);
 
   pServer = NimBLEDevice::createServer();
@@ -244,11 +244,11 @@ void BLEInit() {
 
   // Total Packet 2 size = 25 Bytes. (Fits perfectly under the 31-byte limit!)
 
-  pAdvertising->setAdvertisementData(advData);
-  pAdvertising->setScanResponseData(scanData);
-
   pAdvertising->enableScanResponse(true);
   pAdvertising->setPreferredParams(0x0, 0x0);
+
+  pAdvertising->setAdvertisementData(advData);
+  pAdvertising->setScanResponseData(scanData);
 
   pAdvertising->start();
   Serial.println("System online. Advertisement data structured below 31-byte thresholds!");

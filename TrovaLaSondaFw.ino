@@ -20,7 +20,7 @@
 #include "dfm.h"
 #include "Ble.h"
 
-char version[] = "2.20";
+char version[] = "2.21";
 #if defined(ARDUINO_TTGO_LoRa32_V1)
 char platform[] = "TL32";
 #elif defined(WIFI_LoRa_32_V3)
@@ -28,18 +28,19 @@ char platform[] = "HL32";
 #endif
 const int BATTERY_SAMPLES = 20;
 uint32_t freq = 403000;
+uint64_t tLastAction;
 int currentSonde = 0;
 int rssi, mute, batt;
 bool connected = false;
-Packet packet={
-  .frame=0,
-  .lat=0,
-  .lng=0,
-  .alt=0,
-  .hVel=0, 
-  .vVel=0,
-  .encrypted=false,
-  .serial="",
+Packet packet = {
+  .frame = 0,
+  .lat = 0,
+  .lng = 0,
+  .alt = 0,
+  .hVel = 0,
+  .vVel = 0,
+  .encrypted = false,
+  .serial = "",
 };
 
 bool otaRunning = false;
@@ -82,7 +83,7 @@ MD_KeySwitch button(BUTTON, LOW);
 
 void dump(uint8_t buf[], int size, int rowLen) {
   for (int i = 0; i < size; i++)
-    Serial.printf("%02X%c", buf[i], i % rowLen == (rowLen-1) ? '\n' : ' ');
+    Serial.printf("%02X%c", buf[i], i % rowLen == (rowLen - 1) ? '\n' : ' ');
   if (size % rowLen != 0) Serial.println();
 }
 
@@ -108,22 +109,22 @@ void VBattInit() {
     pinMode(ADC_CTRL_PIN, OUTPUT);
 }
 
-bool isV32=false;
+bool isV32 = false;
 
 int getBattLevel(bool isV32) {
   uint32_t raw;
 
   if (ADC_CTRL_PIN != GPIO_NUM_NC) {
-    digitalWrite(ADC_CTRL_PIN, isV32?HIGH:LOW);
+    digitalWrite(ADC_CTRL_PIN, isV32 ? HIGH : LOW);
     delay(10);
   }
   for (int i = 0; i < BATTERY_SAMPLES; i++)
     raw += analogRead(VBAT_PIN);
 
   if (ADC_CTRL_PIN != GPIO_NUM_NC)
-    digitalWrite(ADC_CTRL_PIN, isV32?LOW:HIGH);
+    digitalWrite(ADC_CTRL_PIN, isV32 ? LOW : HIGH);
 
-  return constrain(map(raw/BATTERY_SAMPLES, 670, 950, 0, 100), 0, 100);
+  return constrain(map(raw / BATTERY_SAMPLES, 670, 950, 0, 100), 0, 100);
 }
 
 /*int getBattLevel() {
@@ -185,28 +186,28 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(BUZZER, OUTPUT);
   VBattInit();
-#if  defined(WIFI_LoRa_32_V3)
-    isV32=getBattLevel(true) > getBattLevel(false);
-    Serial.printf("isV32: %d\n",isV32);
+#if defined(WIFI_LoRa_32_V3)
+  isV32 = getBattLevel(true) > getBattLevel(false);
+  Serial.printf("isV32: %d\n", isV32);
 #endif
   if (BUTTON != GPIO_NUM_NC) {
     pinMode(BUTTON, INPUT);
     button.enableRepeat(false);
     button.enableLongPress(true);
     button.setLongPressTime(1000);
-    if (esp_reset_reason()==ESP_RST_DEEPSLEEP) {
-        uint64_t t=millis();
-        bool ok=false;
+    if (esp_reset_reason() == ESP_RST_DEEPSLEEP) {
+      uint64_t t = millis();
+      bool ok = false;
 
-        while (digitalRead(BUTTON) == LOW)
-          if (millis()-t>1000) {
-            ok=true;
-            break;
-          }
-        if (!ok) {
-          esp_sleep_enable_ext0_wakeup(BUTTON, 0);
-          esp_deep_sleep_start();
+      while (digitalRead(BUTTON) == LOW)
+        if (millis() - t > 1000) {
+          ok = true;
+          break;
         }
+      if (!ok) {
+        esp_sleep_enable_ext0_wakeup(BUTTON, 0);
+        esp_deep_sleep_start();
+      }
     }
   }
   readPrefs();
@@ -228,7 +229,7 @@ void setup() {
     Serial.println("Confermo partizione OK");
     esp_ota_mark_app_valid_cancel_rollback();
   }
-
+  tLastAction = millis();
   //////////////////////////////////////////////////////////////
   // otaProgress=20;
   // otaLength=100;
@@ -240,7 +241,7 @@ void setup() {
 void loop() {
   static uint64_t tLastDisplay = 0, tLastBLELoop = 0;
 
-////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////
   // static bool oldClk=false;
   // static int n=0;
   // bool clk=digitalRead(15)==HIGH;
@@ -257,17 +258,21 @@ void loop() {
   // else
   //   oldClk=false;
   // return;
-////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////
 
   //if (tLastBLELoop == 0 || millis() - tLastBLELoop > 500) {
-    //tLastBLELoop = millis();
-    BLELoop();
+  //tLastBLELoop = millis();
+  BLELoop();
   //}
   if (loopRadio()) {
     bip(150, constrain(map(packet.alt, 0, 40000, 200, 9000), 200, 9000));
     flash(10);
+    tLastAction = millis();
   }
+  if (!connected && tLastAction != 0 && (millis() - tLastAction) > 20 * 60 * 1000)
+    gotoSleep();
   if (tLastDisplay == 0 || millis() - tLastDisplay > 1000) {
+    if (connected) tLastAction = millis();
     if (otaRunning) {
       displayOTA();
     } else {
@@ -281,16 +286,23 @@ void loop() {
   if (BUTTON != GPIO_NUM_NC)
     switch (button.read()) {
       case MD_KeySwitch::KS_PRESS:
+        tLastAction = millis();
         break;
       case MD_KeySwitch::KS_LONGPRESS:
-        sleepRadio();
-        esp_sleep_enable_ext0_wakeup(BUTTON, 0);
-        displayOff();
-
-        while (digitalRead(BUTTON) == LOW)
-          ;
-        delay(100);
-        esp_deep_sleep_start();
+        gotoSleep();
         break;
     }
+}
+
+void gotoSleep() {
+  sleepRadio();
+  if (BUTTON != GPIO_NUM_NC) {
+    esp_sleep_enable_ext0_wakeup(BUTTON, 0);
+    while (digitalRead(BUTTON) == LOW)
+      ;
+  }
+  showSleeping();
+  delay(2500);
+  displayOff();
+  esp_deep_sleep_start();
 }
