@@ -59,7 +59,8 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks {
   }
 
   void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
-    Serial.println("onWrite");
+    // Serial.print("onWrite characteristic=");
+    // Serial.println(pCharacteristic->getUUID().toString().c_str());
     bool restart = false;
     if (pCharacteristic->getUUID().equals(BLEUUID(OTA_TX_UUID))) {
       NimBLEAttValue value = pCharacteristic->getValue();
@@ -91,7 +92,8 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks {
             Serial.printf("Errore esp_ota_write %s\n", esp_err_to_name(err));
             otaErr = err;
           } else {
-            Serial.printf("Ota progress: (%d) %d%%\n", nLen, (100 * otaProgress) / otaLength);
+            // Serial.printf("Ota progress: (%d) %d%%\n", nLen, (100 * otaProgress) / otaLength);
+            // dump(value.data(),nLen,1024);
 
             if (otaProgress == otaLength) {
               esp_ota_end(handleOta);
@@ -182,9 +184,9 @@ void BLEInit() {
   Serial.printf("Nome: %s\n", s);
 
   delay(1000);
-  Serial.println("Initializing Multi-Service NimBLE Stack...");
 
   NimBLEDevice::init("");
+  NimBLEDevice::setMTU(512);
   NimBLEDevice::setPower(ESP_PWR_LVL_P9);
 
   pServer = NimBLEDevice::createServer();
@@ -212,10 +214,10 @@ void BLEInit() {
 
   NimBLEService* pOtaService = pServer->createService(OTA_SERVICE_UUID);
 
-  createCharacteristic(pOtaService, "OTA_TX", OTA_TX_UUID, &pOtaTxChar, false, true);  // Stream out to phone
-  createCharacteristic(pOtaService, "OTA_RX", OTA_RX_UUID, &pOtaRxChar, true, false);  // Receive from phone
+  createCharacteristic(pOtaService, "OTA_TX", OTA_TX_UUID, &pOtaTxChar, true, false);
+  createCharacteristic(pOtaService, "OTA_RX", OTA_RX_UUID, &pOtaRxChar, false, true);
 
-  pOtaRxChar->setCallbacks(pCharCallbacks);
+  pOtaTxChar->setCallbacks(pCharCallbacks);
 
   // advertising initialization (optimized layout for long names + dual 128-bit UUIDs)
   NimBLEAdvertising* pAdvertising = pServer->getAdvertising();
@@ -251,7 +253,6 @@ void BLEInit() {
   pAdvertising->setScanResponseData(scanData);
 
   pAdvertising->start();
-  Serial.println("System online. Advertisement data structured below 31-byte thresholds!");
 }
 
 void BLELoop() {

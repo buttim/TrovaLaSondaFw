@@ -6,13 +6,13 @@
       "file": "rdzTrovaLaSonda.ino.bin"
     },
     "HL32": {
-      "version": "2.19",
-      "info": "Supports the v3.2 board",
+      "version": "2.23",
+      "info": "Auto shutdown on timeout. OTA update fixed",
       "file": "HELTEC/TrovaLaSondaFw.ino.bin"
     },
     "TL32": {
-      "version": "2.19",
-      "info": "Supports X series RS41s",
+      "version": "2.23",
+      "info": "Auto shutdown on timeout. OTA update fixed",
       "file": "TTGO/TrovaLaSondaFw.ino.bin"
     }
   }

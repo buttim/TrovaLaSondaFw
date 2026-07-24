@@ -20,7 +20,7 @@
 #include "dfm.h"
 #include "Ble.h"
 
-char version[] = "2.21";
+char version[] = "2.23";
 #if defined(ARDUINO_TTGO_LoRa32_V1)
 char platform[] = "TL32";
 #elif defined(WIFI_LoRa_32_V3)
@@ -29,9 +29,8 @@ char platform[] = "HL32";
 const int BATTERY_SAMPLES = 20;
 uint32_t freq = 403000;
 uint64_t tLastAction;
-int currentSonde = 0;
-int rssi, mute, batt;
-bool connected = false;
+int currentSonde = 0, rssi, mute, batt;
+bool connected = false, showingQRCode = false;
 Packet packet = {
   .frame = 0,
   .lat = 0,
@@ -81,7 +80,7 @@ Preferences preferences;
 Ticker tickBuzzOff, tickLedOff;
 MD_KeySwitch button(BUTTON, LOW);
 
-void dump(uint8_t buf[], int size, int rowLen) {
+void dump(const uint8_t buf[], int size, int rowLen) {
   for (int i = 0; i < size; i++)
     Serial.printf("%02X%c", buf[i], i % rowLen == (rowLen - 1) ? '\n' : ' ');
   if (size % rowLen != 0) Serial.println();
@@ -180,6 +179,19 @@ const char *resetReason(esp_reset_reason_t reason) {
   }
 }
 
+void gotoSleep() {
+  sleepRadio();
+  if (BUTTON != GPIO_NUM_NC) {
+    esp_sleep_enable_ext0_wakeup(BUTTON, 0);
+    while (digitalRead(BUTTON) == LOW)
+      ;
+  }
+  showSleeping();
+  delay(1500);
+  displayOff();
+  esp_deep_sleep_start();
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -195,20 +207,20 @@ void setup() {
     button.enableRepeat(false);
     button.enableLongPress(true);
     button.setLongPressTime(1000);
-    if (esp_reset_reason() == ESP_RST_DEEPSLEEP) {
-      uint64_t t = millis();
-      bool ok = false;
+    //if (esp_reset_reason() == ESP_RST_DEEPSLEEP) {
+    uint64_t t = millis();
+    bool ok = false;
 
-      while (digitalRead(BUTTON) == LOW)
-        if (millis() - t > 1000) {
-          ok = true;
-          break;
-        }
-      if (!ok) {
-        esp_sleep_enable_ext0_wakeup(BUTTON, 0);
-        esp_deep_sleep_start();
+    while (digitalRead(BUTTON) == LOW)
+      if (millis() - t > 1000) {
+        ok = true;
+        break;
       }
+    if (!ok) {
+      esp_sleep_enable_ext0_wakeup(BUTTON, 0);
+      esp_deep_sleep_start();
     }
+    //}
   }
   readPrefs();
   bip();
@@ -275,7 +287,7 @@ void loop() {
     if (connected) tLastAction = millis();
     if (otaRunning) {
       displayOTA();
-    } else {
+    } else if (!showingQRCode) {
       tLastDisplay = millis();
       batt = getBattLevel(isV32);
       updateDisplay(freq, sondes[currentSonde]->name, mute, connected, packet.serial, batt, rssi, packet.lat, packet.lng, packet.alt);
@@ -287,22 +299,13 @@ void loop() {
     switch (button.read()) {
       case MD_KeySwitch::KS_PRESS:
         tLastAction = millis();
+        if (!showingQRCode)
+          showQRCode(packet.lat, packet.lng);
+        showingQRCode = !showingQRCode;
         break;
       case MD_KeySwitch::KS_LONGPRESS:
+        showSleeping();
         gotoSleep();
         break;
     }
-}
-
-void gotoSleep() {
-  sleepRadio();
-  if (BUTTON != GPIO_NUM_NC) {
-    esp_sleep_enable_ext0_wakeup(BUTTON, 0);
-    while (digitalRead(BUTTON) == LOW)
-      ;
-  }
-  showSleeping();
-  delay(2500);
-  displayOff();
-  esp_deep_sleep_start();
 }

@@ -72,7 +72,7 @@ extern char version[], platform[];
 extern bool otaRunning;
 extern int otaLength, otaErr, otaProgress;
 
-void dump(uint8_t buf[], int size, int rowLen = 16);
+void dump(const uint8_t buf[], int size, int rowLen = 16);
 void savePrefs();
 void bip(int duration, int freq);
 #endif

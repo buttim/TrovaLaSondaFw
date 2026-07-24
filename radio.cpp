@@ -152,7 +152,7 @@ void initRadio() {
   }
 #endif
 #ifdef SX1278
-  Serial.println("Initializing SX1278");
+  // Serial.println("Initializing SX1278");
   uint8_t mode;
 
   pinMode(RADIO_DIO_0, INPUT);
@@ -235,7 +235,7 @@ void initRadio() {
   // writeRegister(RegIrqFlags1, 0xFF);
   // writeRegister(RegIrqFlags2, 0xFF);
 
-  dumpRegisters();
+  // dumpRegisters();
 #endif
 }
 

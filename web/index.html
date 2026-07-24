@@ -11,6 +11,8 @@
 			h3,h1 {color:yellow}
 			table,th,td {border: 1px solid;border-collapse:collapse;margin-left: auto;margin-right: auto;}
 			td,th { text-align:center;padding:5px}
+            .yes::before {content:'\2713\00a0'; color:lightgreen; font-size:150%}
+            .no::before {content:'\2717\00a0'; color:red; font-size:150%}
 			th { font-weigth: bold; background:#404040}
 			a { text-decoration: none; color:#FFCC00!important}
 			a:visited {color:orange}
@@ -80,31 +82,38 @@ $( function() {
 			<table>
 				<tr>
 					<th>Model</td>
+					<th>Tested in the lab</td>
 					<th>Tested in the wild</td>
 				</tr>
 				<tr>
 					<td>Vaisala RS41</td>
-					<td>yes</td>
+					<td class='yes'>yes</td>
+					<td class='yes'>yes</td>
 				</tr>
 				<tr>
 					<td>Vaisala RS41+AUX</td>
-					<td>yes</td>
+					<td class='yes'>yes</td>
+					<td class='yes'>yes</td>
 				</tr>
 				<tr>
 					<td>Meteomodem M10</td>
-					<td>no</td>
+					<td class='yes'>yes</td>
+					<td class='no'>no</td>
 				</tr>
 				<tr>
 					<td>Meteomodem M20</td>
-					<td>yes</td>
+					<td class='yes'>yes</td>
+					<td class='yes'>yes</td>
 				</tr>
 				<tr>
 					<td>Graw DFM-09</td>
-					<td>no</td>
+					<td class='yes'>yes</td>
+					<td class='no'>no</td>
 				</tr>
 				<tr>
 					<td>Graw DFM-17</td>
-					<td>no</td>
+					<td class='yes'>yes</td>
+					<td class='no'>no</td>
 				</tr>
 			</table>
 			</div>

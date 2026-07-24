@@ -1,6 +1,7 @@
 #ifndef __DISP_H__
 #define __DISP_H__
 void initDisplay();
+void showQRCode(double lat, double lng);
 void displayOTA();
 void displayOff();
 void showSleeping();
