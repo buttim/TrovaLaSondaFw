@@ -20,7 +20,7 @@ const gpio_num_t BUTTON = GPIO_NUM_0, VBAT_PIN = GPIO_NUM_1, ADC_CTRL_PIN = GPIO
 const gpio_num_t BUTTON = GPIO_NUM_NC, VBAT_PIN = GPIO_NUM_35, ADC_CTRL_PIN = GPIO_NUM_NC, BUZZER = GPIO_NUM_4,
                  Vext = GPIO_NUM_NC, RADIO_NSS = (gpio_num_t)SS, RADIO_RESET = GPIO_NUM_23, LORA_CLK = (gpio_num_t)SCK, RADIO_DIO_0 = GPIO_NUM_26;
 #else
-#error "Board not supported"
+#error "Board not supported (must be 'Heltec WiFi LoRa32 (v3)' or 'TTGO LoRa32')"
 #endif
 
 #define MAX_PACKET_LENGTH RS41AUX_PACKET_LENGTH  //longest packet length

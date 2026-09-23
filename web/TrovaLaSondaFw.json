@@ -6,13 +6,13 @@
       "file": "rdzTrovaLaSonda.ino.bin"
     },
     "HL32": {
-      "version": "2.23",
-      "info": "Auto shutdown on timeout. OTA update fixed",
+      "version": "2.24",
+      "info": "Send sonde position if known upon connection",
       "file": "HELTEC/TrovaLaSondaFw.ino.bin"
     },
     "TL32": {
-      "version": "2.23",
-      "info": "Auto shutdown on timeout. OTA update fixed",
+      "version": "2.24",
+      "info": "Send sonde position if known upon connection",
       "file": "TTGO/TrovaLaSondaFw.ino.bin"
     }
   }

@@ -33,10 +33,11 @@ NimBLECharacteristic *pPacketChar = nullptr,
                      *pVersionChar = nullptr,
                      *pOtaTxChar = nullptr,
                      *pOtaRxChar = nullptr;
+bool justConnected = false;
 
 class MyServerCallbacks : public NimBLEServerCallbacks {
   void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override {
-    connected = true;
+    justConnected = connected = true;
     connected_addr = connInfo.getAddress();
     Serial.printf("Client connected! Address: %s\n", connected_addr.toString().c_str());
   }
@@ -256,5 +257,10 @@ void BLEInit() {
 }
 
 void BLELoop() {
-  vTaskDelay(pdMS_TO_TICKS(1));
+  if (justConnected && packet.lat != 0 && packet.lng != 0) {
+    justConnected = false;
+    delay(1500);
+    BLENotifyPacket();
+  }
+  vTaskDelay(pdMS_TO_TICKS(1)); 
 }
